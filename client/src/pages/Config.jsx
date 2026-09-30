@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { formatRupiah } from '../utils/helpers';
-import {
-  Settings,
-  QrCode,
-  DollarSign,
-  Upload,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-  Save,
-  Lock,
-} from 'lucide-react';
 
 export default function Config() {
   const [formData, setFormData] = useState({
@@ -21,7 +10,6 @@ export default function Config() {
     bankInfo: '',
   });
 
-  // Admin password change form
   const [profileData, setProfileData] = useState({
     name: '',
     currentPassword: '',
@@ -37,7 +25,6 @@ export default function Config() {
   const [passwordMsg, setPasswordMsg] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // Fetch current config
   const fetchConfigAndProfile = async () => {
     try {
       setLoading(true);
@@ -69,12 +56,10 @@ export default function Config() {
     fetchConfigAndProfile();
   }, []);
 
-  // Handle Image Upload & Convert to Base64
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check size limit (max 2MB for base64 storage)
     if (file.size > 2 * 1024 * 1024) {
       setErrorMsg('Ukuran file QR code maksimal 2MB.');
       return;
@@ -96,11 +81,11 @@ export default function Config() {
     try {
       const res = await api.put('/config', formData);
       if (res.data.success) {
-        setSuccessMsg('Konfigurasi kas dan QR code berhasil disimpan!');
+        setSuccessMsg('Pengaturan kas berhasil disimpan.');
         setTimeout(() => setSuccessMsg(''), 4000);
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Gagal menyimpan konfigurasi');
+      setErrorMsg(err.response?.data?.message || 'Gagal menyimpan pengaturan');
     } finally {
       setSaving(false);
     }
@@ -115,7 +100,7 @@ export default function Config() {
     try {
       const res = await api.put('/auth/profile', profileData);
       if (res.data.success) {
-        setPasswordMsg('Password / Nama admin berhasil diperbarui!');
+        setPasswordMsg('Profil / password berhasil diubah.');
         setProfileData((prev) => ({ ...prev, currentPassword: '', newPassword: '' }));
         setTimeout(() => setPasswordMsg(''), 4000);
       }
@@ -128,107 +113,91 @@ export default function Config() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="p-8 text-center text-xs text-neutral-400">
+        Memuat pengaturan...
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-5xl mx-auto">
+    <div className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="pb-4 border-b border-slate-200">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Konfigurasi Sistem</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Atur nominal kas per bulan, unggah gambar QRIS / rekening pembayaran, dan keamanan admin
+      <div className="pb-4 border-b border-neutral-200">
+        <h1 className="text-xl font-semibold text-neutral-900">Pengaturan Sistem</h1>
+        <p className="text-xs text-neutral-500 mt-0.5">
+          Konfigurasi nominal iuran, gambar QRIS pembayaran, dan akun admin
         </p>
       </div>
 
       {successMsg && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
-          <span>{successMsg}</span>
+        <div className="p-3 rounded-md bg-neutral-50 border border-neutral-300 text-neutral-800 text-xs">
+          {successMsg}
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
-          <span>{errorMsg}</span>
+        <div className="p-3 rounded-md bg-neutral-50 border border-neutral-300 text-neutral-800 text-xs">
+          {errorMsg}
         </div>
       )}
 
-      {/* Main Configuration Form */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 md:p-8">
-        <form onSubmit={handleSaveConfig} className="space-y-6">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <DollarSign className="w-5 h-5 text-indigo-600" />
-            Pengaturan Iuran & Pembayaran
-          </h2>
-
-          {/* Nominal Kas Per Bulan */}
+      {/* Form Konfigurasi Kas & QR */}
+      <div className="bg-white rounded-md border border-neutral-200 p-5 sm:p-6">
+        <form onSubmit={handleSaveConfig} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
+            <h2 className="text-sm font-semibold text-neutral-900 pb-2 border-b border-neutral-100">
+              Iuran & QR Pembayaran
+            </h2>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-700 mb-1">
               Nominal Iuran Kas Per Bulan (Rp)
             </label>
-            <p className="text-xs text-slate-500 mb-2">
-              Nominal standar yang akan digunakan untuk tracking status lunas dan pembayaran kas bulanan.
-            </p>
-            <div className="relative max-w-xs">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-semibold text-sm">
-                Rp
-              </div>
+            <div className="max-w-xs">
               <input
                 type="number"
                 required
                 min="0"
                 value={formData.monthlyDues}
                 onChange={(e) => setFormData({ ...formData, monthlyDues: Number(e.target.value) })}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
               />
             </div>
-            <p className="text-xs text-indigo-600 mt-1 font-medium">
-              Terbaca: {formatRupiah(formData.monthlyDues)} / bulan
+            <p className="text-[11px] text-neutral-500 mt-1">
+              Standar: {formatRupiah(formData.monthlyDues)} / bulan
             </p>
           </div>
 
-          {/* QR Code Pembayaran */}
-          <div className="border-t border-slate-100 pt-6">
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Kode QR Pembayaran (QRIS / Bank)
+          <div>
+            <label className="block text-xs font-medium text-neutral-700 mb-1">
+              Gambar QR Code Pembayaran
             </label>
-            <p className="text-xs text-slate-500 mb-3">
-              Unggah file gambar kode QR (PNG/JPG). Gambar ini akan otomatis muncul pada pop-up pembayaran kas.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-2">
               {formData.qrCodeImage ? (
-                <div className="relative group">
+                <div className="relative">
                   <img
                     src={formData.qrCodeImage}
-                    alt="QR Code Kas"
-                    className="w-40 h-40 object-contain rounded-xl border border-slate-300 bg-white p-2 shadow-xs"
+                    alt="QR Code"
+                    className="w-32 h-32 object-contain bg-white p-1 border border-neutral-300 rounded"
                   />
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, qrCodeImage: '' })}
-                    className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700"
-                    title="Hapus Gambar QR"
+                    className="mt-1 block text-xs text-neutral-500 hover:text-neutral-900 underline"
                   >
-                    ✕
+                    Hapus gambar
                   </button>
                 </div>
               ) : (
-                <div className="w-40 h-40 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                  <QrCode className="w-10 h-10 mb-1" />
-                  <span className="text-xs">Belum ada QR</span>
+                <div className="w-32 h-32 border border-dashed border-neutral-300 rounded flex items-center justify-center text-xs text-neutral-400 bg-neutral-50">
+                  Tidak ada QR
                 </div>
               )}
 
-              <div className="space-y-3">
-                <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium cursor-pointer transition-colors border border-slate-300">
-                  <Upload className="w-4 h-4" />
-                  <span>Pilih & Upload Gambar QR</span>
+              <div>
+                <label className="inline-block px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-md text-xs font-medium text-neutral-700 cursor-pointer">
+                  Pilih Gambar QR
                   <input
                     type="file"
                     accept="image/*"
@@ -236,90 +205,85 @@ export default function Config() {
                     className="hidden"
                   />
                 </label>
-                <p className="text-xs text-slate-400">Format yang didukung: JPG, PNG, WEBP (Maksimal 2MB)</p>
+                <p className="text-[11px] text-neutral-400 mt-1.5">Maksimal ukuran file: 2MB (PNG / JPG / WEBP)</p>
               </div>
             </div>
           </div>
 
-          {/* Keterangan QR */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Catatan Petunjuk QRIS
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Keterangan / Petunjuk QR
               </label>
               <input
                 type="text"
-                placeholder="Contoh: Scan QRIS atas nama Kas Angkatan 2024"
+                placeholder="Misal: Scan QRIS a.n Kas Angkatan"
                 value={formData.qrCodeNote}
                 onChange={(e) => setFormData({ ...formData, qrCodeNote: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Nomor Rekening / E-Wallet Alternatif
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Rekening / E-Wallet Alternatif
               </label>
               <input
                 type="text"
-                placeholder="Contoh: BCA 1234567890 a.n Budi / DANA 08123456789"
+                placeholder="BCA: 1234567890 / DANA: 08123456"
                 value={formData.bankInfo}
                 onChange={(e) => setFormData({ ...formData, bankInfo: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
+          <div className="pt-2 border-t border-neutral-100 flex justify-end">
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-xs disabled:opacity-50"
+              className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
-              {saving ? 'Menyimpan...' : 'Simpan Konfigurasi Kas'}
+              {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Admin Security Settings */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 md:p-8">
+      {/* Akun Admin */}
+      <div className="bg-white rounded-md border border-neutral-200 p-5 sm:p-6">
         <form onSubmit={handleUpdatePassword} className="space-y-4">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Lock className="w-5 h-5 text-indigo-600" />
-            Keamanan Akun Admin
+          <h2 className="text-sm font-semibold text-neutral-900 pb-2 border-b border-neutral-100">
+            Akun & Keamanan Admin
           </h2>
 
           {passwordMsg && (
-            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-              <span>{passwordMsg}</span>
+            <div className="p-2.5 rounded bg-neutral-50 border border-neutral-300 text-neutral-800 text-xs">
+              {passwordMsg}
             </div>
           )}
 
           {passwordError && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-              <span>{passwordError}</span>
+            <div className="p-2.5 rounded bg-neutral-50 border border-neutral-300 text-neutral-800 text-xs">
+              {passwordError}
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                Nama Tampilan Admin
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Nama Tampilan
               </label>
               <input
                 type="text"
                 value={profileData.name}
                 onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
                 Password Saat Ini
               </label>
               <input
@@ -327,31 +291,31 @@ export default function Config() {
                 placeholder="••••••••"
                 value={profileData.currentPassword}
                 onChange={(e) => setProfileData({ ...profileData, currentPassword: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
                 Password Baru
               </label>
               <input
                 type="password"
-                placeholder="Kosongkan jika tidak diubah"
+                placeholder="Kosongkan jika tidak diganti"
                 value={profileData.newPassword}
                 onChange={(e) => setProfileData({ ...profileData, newPassword: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
               />
             </div>
           </div>
 
-          <div className="pt-2 flex justify-end">
+          <div className="pt-2 border-t border-neutral-100 flex justify-end">
             <button
               type="submit"
               disabled={savingPassword}
-              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-50"
             >
-              {savingPassword ? 'Memperbarui...' : 'Perbarui Akun Admin'}
+              {savingPassword ? 'Memperbarui...' : 'Perbarui Profil'}
             </button>
           </div>
         </form>

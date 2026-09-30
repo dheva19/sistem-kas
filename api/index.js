@@ -14,6 +14,11 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Health check endpoint (bisa dicek tanpa menunggu database)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Ensure DB connection for every incoming serverless request
 app.use(async (req, res, next) => {
   try {
@@ -23,22 +28,17 @@ app.use(async (req, res, next) => {
     console.error('Database connection error:', error);
     res.status(500).json({
       success: false,
-      message: 'Gagal terhubung ke Database MongoDB. Pastikan MONGODB_URI valid.',
+      message: 'Gagal terhubung ke Database MongoDB. Pastikan IP Address diizinkan di Network Access MongoDB Atlas.',
       error: error.message,
     });
   }
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Mount Central Routes
 app.use('/api', routes);
 
 // 404 handler for API routes
-app.use('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({ success: false, message: 'API Route tidak ditemukan' });
 });
 

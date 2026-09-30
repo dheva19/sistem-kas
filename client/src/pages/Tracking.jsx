@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { formatRupiah, getMonthName, formatDate, exportToExcel, exportToCSV } from '../utils/helpers';
-import {
-  Calendar,
-  CheckCircle,
-  XCircle,
-  QrCode,
-  Download,
-  Search,
-  Filter,
-  CreditCard,
-  X,
-  AlertCircle,
-  DollarSign,
-  Info,
-} from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export default function Tracking() {
   const currentDate = new Date();
@@ -22,13 +9,13 @@ export default function Tracking() {
   const [year, setYear] = useState(currentDate.getFullYear());
   const [batchYear, setBatchYear] = useState('');
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, paid, unpaid
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const [trackingData, setTrackingData] = useState(null);
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Modal State for Payment / QR
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState(30000);
@@ -36,7 +23,6 @@ export default function Tracking() {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Fetch Config (for default monthlyDues and QR Image)
   const fetchConfig = async () => {
     try {
       const res = await api.get('/config');
@@ -49,7 +35,6 @@ export default function Tracking() {
     }
   };
 
-  // Fetch Monthly Tracking
   const fetchTracking = async () => {
     try {
       setLoading(true);
@@ -75,7 +60,6 @@ export default function Tracking() {
     fetchTracking();
   }, [month, year, batchYear]);
 
-  // Open Payment modal
   const handleOpenPaymentModal = (item) => {
     setSelectedMember(item.member);
     setPaymentAmount(config?.monthlyDues || 30000);
@@ -106,9 +90,8 @@ export default function Tracking() {
     }
   };
 
-  // Delete payment
   const handleDeletePayment = async (paymentId, memberName) => {
-    if (window.confirm(`Batalkan / hapus catatan pembayaran kas ${memberName} untuk periode ini?`)) {
+    if (window.confirm(`Batalkan pembayaran kas "${memberName}" untuk bulan ini?`)) {
       try {
         await api.delete(`/payments/${paymentId}`);
         fetchTracking();
@@ -118,7 +101,6 @@ export default function Tracking() {
     }
   };
 
-  // Filtered List
   const filteredList = (trackingData?.trackingList || []).filter((item) => {
     const matchName = item.member.name.toLowerCase().includes(search.toLowerCase());
     if (!matchName) return false;
@@ -135,9 +117,9 @@ export default function Tracking() {
       No: idx + 1,
       Nama: item.member.name,
       Angkatan: item.member.batchYear,
-      'Bulan & Tahun': `${getMonthName(month)} ${year}`,
-      'Status Kas': item.isPaid ? 'Lunas' : 'Belum Bayar',
-      'Nominal Iuran': item.isPaid ? item.paymentInfo.amount : (config?.monthlyDues || 30000),
+      Periode: `${getMonthName(month)} ${year}`,
+      Status: item.isPaid ? 'Lunas' : 'Belum Bayar',
+      Nominal: item.isPaid ? item.paymentInfo.amount : (config?.monthlyDues || 30000),
       'Waktu Bayar': item.isPaid ? formatDate(item.paymentInfo.paidAt) : '-',
       Catatan: item.paymentInfo?.notes || '-',
     }));
@@ -150,47 +132,43 @@ export default function Tracking() {
     }
   };
 
-  // Generate years list for dropdown
   const years = [currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1];
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 md:p-8 space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-neutral-200">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Status Kas Bulanan</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Tracking kepatuhan kas anggota bulan <span className="font-semibold text-slate-700">{getMonthName(month)} {year}</span>
+          <h1 className="text-xl font-semibold text-neutral-900">Status Kas Bulanan</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Daftar iuran bulan {getMonthName(month)} {year}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => handleExport('excel')}
-            className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors shadow-xs"
+            className="px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-md text-xs font-medium transition-colors"
           >
-            <Download className="w-4 h-4" />
-            Excel
+            Export Excel
           </button>
           <button
             onClick={() => handleExport('csv')}
-            className="flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium transition-colors shadow-xs"
+            className="px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-md text-xs font-medium transition-colors"
           >
-            <Download className="w-4 h-4" />
-            CSV
+            Export CSV
           </button>
         </div>
       </div>
 
-      {/* Control Bar: Bulan, Tahun, Filter Status, Search */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-        {/* Bulan & Tahun */}
+      {/* Control bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-white p-3 rounded-md border border-neutral-200">
         <div>
-          <label className="block text-xs font-semibold text-slate-600 uppercase mb-1.5">Bulan</label>
+          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Bulan</label>
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-800 focus:outline-none focus:border-neutral-900"
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
               <option key={m} value={m}>
@@ -201,11 +179,11 @@ export default function Tracking() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-600 uppercase mb-1.5">Tahun</label>
+          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Tahun</label>
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-800 focus:outline-none focus:border-neutral-900"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -215,145 +193,111 @@ export default function Tracking() {
           </select>
         </div>
 
-        {/* Filter Status Bayar */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 uppercase mb-1.5">Filter Status</label>
+          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Status Iuran</label>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-800 focus:outline-none focus:border-neutral-900"
           >
             <option value="all">Semua Anggota</option>
-            <option value="paid">Hanya yang Sudah Bayar (Lunas)</option>
-            <option value="unpaid">Hanya yang Belum Bayar</option>
+            <option value="paid">Sudah Lunas</option>
+            <option value="unpaid">Belum Bayar</option>
           </select>
         </div>
 
-        {/* Search */}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 uppercase mb-1.5">Cari Anggota</label>
+          <label className="block text-[11px] font-medium text-neutral-600 mb-1">Cari Nama</label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-4 h-4" />
+            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-neutral-400">
+              <Search className="w-3.5 h-3.5" />
             </div>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Ketik nama..."
-              className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              placeholder="Cari..."
+              className="w-full pl-8 pr-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-900"
             />
           </div>
         </div>
       </div>
 
-      {/* Overview Cards Bulan Terpilih */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Anggota</p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{trackingData?.totalMembers || 0}</p>
-          </div>
-          <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-            <Filter className="w-6 h-6" />
-          </div>
+      {/* Ringkasan Angka */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white p-3 rounded-md border border-neutral-200">
+          <p className="text-[11px] text-neutral-500 font-medium">Total Anggota</p>
+          <p className="text-lg font-semibold text-neutral-900 mt-0.5">{trackingData?.totalMembers || 0}</p>
         </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Sudah Bayar (Lunas)</p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{trackingData?.paidCount || 0}</p>
-          </div>
-          <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-            <CheckCircle className="w-6 h-6" />
-          </div>
+        <div className="bg-white p-3 rounded-md border border-neutral-200">
+          <p className="text-[11px] text-neutral-500 font-medium">Sudah Lunas</p>
+          <p className="text-lg font-semibold text-neutral-900 mt-0.5">{trackingData?.paidCount || 0}</p>
         </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-rose-100 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-rose-600">Belum Bayar</p>
-            <p className="text-2xl font-bold text-rose-700 mt-1">{trackingData?.unpaidCount || 0}</p>
-          </div>
-          <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
-            <XCircle className="w-6 h-6" />
-          </div>
+        <div className="bg-white p-3 rounded-md border border-neutral-200">
+          <p className="text-[11px] text-neutral-500 font-medium">Belum Bayar</p>
+          <p className="text-lg font-semibold text-neutral-900 mt-0.5">{trackingData?.unpaidCount || 0}</p>
         </div>
       </div>
 
-      {/* Tracking Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      {/* Table */}
+      <div className="bg-white rounded-md border border-neutral-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase text-xs tracking-wider">
-                <th className="py-3.5 px-4 w-12 text-center">No</th>
-                <th className="py-3.5 px-4">Nama Anggota</th>
-                <th className="py-3.5 px-4">Angkatan</th>
-                <th className="py-3.5 px-4">Status Kas</th>
-                <th className="py-3.5 px-4">Waktu Bayar</th>
-                <th className="py-3.5 px-4 text-right">Aksi</th>
+              <tr className="bg-neutral-50 border-b border-neutral-200 text-neutral-600 text-xs font-medium">
+                <th className="py-2.5 px-4 w-12 text-center">No</th>
+                <th className="py-2.5 px-4">Nama Anggota</th>
+                <th className="py-2.5 px-4">Angkatan</th>
+                <th className="py-2.5 px-4">Status</th>
+                <th className="py-2.5 px-4">Tanggal Pembayaran</th>
+                <th className="py-2.5 px-4 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-neutral-100">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-slate-400">
-                    <div className="inline-block w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <p>Memuat status kas...</p>
+                  <td colSpan="6" className="py-8 text-center text-xs text-neutral-400">
+                    Memuat data kas...
                   </td>
                 </tr>
               ) : filteredList.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-slate-400">
-                    Tidak ada anggota yang sesuai dengan filter.
+                  <td colSpan="6" className="py-8 text-center text-xs text-neutral-400">
+                    Tidak ada data yang sesuai.
                   </td>
                 </tr>
               ) : (
                 filteredList.map((item, idx) => (
-                  <tr key={item.member._id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 text-center text-slate-400">{idx + 1}</td>
-                    <td className="py-3.5 px-4 font-medium text-slate-800 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs">
-                        {item.member.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span>{item.member.name}</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                        {item.member.batchYear}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
+                  <tr key={item.member._id} className="hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-4 text-center text-neutral-400 text-xs">{idx + 1}</td>
+                    <td className="py-2.5 px-4 font-medium text-neutral-900">{item.member.name}</td>
+                    <td className="py-2.5 px-4 text-neutral-600 text-xs">{item.member.batchYear}</td>
+                    <td className="py-2.5 px-4 text-xs">
                       {item.isPaid ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle className="w-3.5 h-3.5" />
+                        <span className="text-neutral-800 font-medium">
                           Lunas ({formatRupiah(item.paymentInfo.amount)})
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                          <XCircle className="w-3.5 h-3.5" />
-                          Belum Bayar
-                        </span>
+                        <span className="text-neutral-400">Belum Bayar</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-500 text-xs">
+                    <td className="py-2.5 px-4 text-neutral-500 text-xs">
                       {item.isPaid ? formatDate(item.paymentInfo.paidAt) : '-'}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-2.5 px-4 text-right">
                       {item.isPaid ? (
                         <button
                           onClick={() => handleDeletePayment(item.paymentInfo._id, item.member.name)}
-                          className="px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-rose-200"
+                          className="text-xs text-neutral-400 hover:text-neutral-900"
                         >
                           Batalkan
                         </button>
                       ) : (
                         <button
                           onClick={() => handleOpenPaymentModal(item)}
-                          className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg shadow-xs transition-colors flex items-center gap-1.5 ml-auto"
+                          className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-xs font-medium"
                         >
-                          <QrCode className="w-3.5 h-3.5" />
-                          Bayar Kas
+                          Bayar
                         </button>
                       )}
                     </td>
@@ -365,116 +309,88 @@ export default function Tracking() {
         </div>
       </div>
 
-      {/* Modal Bayar Kas & QR Code Pembayaran */}
+      {/* Modal Payment & QR Code */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg p-6 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-slate-800 text-lg">Catat Pembayaran Kas</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40 overflow-y-auto">
+          <div className="bg-white rounded-lg border border-neutral-200 w-full max-w-sm p-5 shadow-lg my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+              <h2 className="font-semibold text-neutral-900 text-sm">Pembayaran Kas</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="text-neutral-400 hover:text-neutral-600"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {modalError && (
-              <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{modalError}</span>
+              <div className="mt-3 p-2.5 rounded bg-neutral-50 border border-neutral-300 text-neutral-700 text-xs">
+                {modalError}
               </div>
             )}
 
-            {/* QR Code Section */}
-            <div className="mt-4 bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                QR Code Pembayaran Kas
-              </p>
-              {config?.qrCodeImage ? (
-                <div className="flex flex-col items-center">
-                  <img
-                    src={config.qrCodeImage}
-                    alt="QRIS Pembayaran Kas"
-                    className="w-48 h-48 object-contain rounded-xl border border-slate-200 shadow-xs bg-white p-2"
-                  />
-                  <p className="text-xs text-slate-600 mt-2 font-medium">{config.qrCodeNote}</p>
-                  {config.bankInfo && (
-                    <p className="text-xs text-slate-500 mt-1 whitespace-pre-line">{config.bankInfo}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="py-6 text-center">
-                  <QrCode className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs text-slate-500">
-                    Belum ada QR Code yang diatur. Anda dapat mengunggahnya di halaman <b>Konfigurasi</b>.
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* QR Code */}
+            {config?.qrCodeImage ? (
+              <div className="mt-4 p-3 bg-neutral-50 border border-neutral-200 rounded-md text-center">
+                <p className="text-xs font-medium text-neutral-700 mb-2">QR Code Pembayaran</p>
+                <img
+                  src={config.qrCodeImage}
+                  alt="QR Code"
+                  className="w-36 h-36 object-contain mx-auto bg-white p-1 border border-neutral-200 rounded"
+                />
+                <p className="text-[11px] text-neutral-500 mt-2">{config.qrCodeNote}</p>
+                {config.bankInfo && (
+                  <p className="text-[11px] text-neutral-600 mt-1">{config.bankInfo}</p>
+                )}
+              </div>
+            ) : null}
 
-            {/* Form Input Detail Pembayaran */}
-            <form onSubmit={handleRecordPayment} className="mt-4 space-y-4">
-              <div className="bg-indigo-50/60 p-3 rounded-xl text-xs text-indigo-900 border border-indigo-100 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{selectedMember?.name}</p>
-                  <p className="text-indigo-700">Angkatan {selectedMember?.batchYear}</p>
-                </div>
-                <div className="text-right">
-                  <span className="font-bold text-sm text-indigo-900">
-                    Bulan {getMonthName(month)} {year}
-                  </span>
-                </div>
+            <form onSubmit={handleRecordPayment} className="mt-4 space-y-3">
+              <div className="p-2.5 bg-neutral-50 rounded border border-neutral-200 text-xs">
+                <span className="font-medium text-neutral-900">{selectedMember?.name}</span>
+                <span className="text-neutral-500"> • Bulan {getMonthName(month)} {year}</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                  Nominal Pembayaran (Rp)
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-semibold text-sm">
-                    Rp
-                  </div>
-                  <input
-                    type="number"
-                    required
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                  Catatan / Keterangan (Opsional)
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                  Nominal (Rp)
                 </label>
                 <input
-                  type="text"
-                  placeholder="Misal: Transfer BCA a.n Budi / Tunai"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  type="number"
+                  required
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div>
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                  Catatan (Opsional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Misal: Tunai / Transfer"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-neutral-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-xl text-sm font-medium text-slate-700"
+                  className="px-3 py-1.5 border border-neutral-300 hover:bg-neutral-50 rounded-md text-xs font-medium text-neutral-700"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-medium disabled:opacity-50"
                 >
-                  {submitting ? 'Menyimpan...' : 'Konfirmasi Pembayaran'}
+                  {submitting ? 'Menyimpan...' : 'Simpan Pembayaran'}
                 </button>
               </div>
             </form>

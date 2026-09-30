@@ -4,13 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Users,
-  CreditCard,
-  Receipt,
+  CheckSquare,
+  ArrowDownCircle,
   Settings,
   LogOut,
   Menu,
   X,
-  Wallet,
 } from 'lucide-react';
 
 export default function Layout() {
@@ -25,28 +24,24 @@ export default function Layout() {
 
   const navLinks = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Status Kas Bulanan', path: '/tracking', icon: CreditCard },
+    { name: 'Status Kas Bulanan', path: '/tracking', icon: CheckSquare },
     { name: 'Data Anggota', path: '/members', icon: Users },
-    { name: 'Pengeluaran Kas', path: '/expenses', icon: Receipt },
-    { name: 'Konfigurasi', path: '/config', icon: Settings },
+    { name: 'Pengeluaran', path: '/expenses', icon: ArrowDownCircle },
+    { name: 'Pengaturan', path: '/config', icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800">
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white border-r border-slate-800 shadow-xl shrink-0">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800/80">
-          <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
-            <Wallet className="w-6 h-6" />
-          </div>
+    <div className="min-h-screen bg-neutral-100 flex flex-col md:flex-row text-neutral-800 antialiased font-sans">
+      {/* Sidebar Desktop */}
+      <aside className="hidden md:flex flex-col w-60 bg-white border-r border-neutral-200 shrink-0">
+        <div className="h-16 px-6 flex items-center border-b border-neutral-200">
           <div>
-            <h1 className="font-bold text-lg tracking-wide text-white">KAS KITA</h1>
-            <p className="text-xs text-slate-400">Manajemen Kas MERN</p>
+            <span className="font-semibold text-neutral-900 tracking-tight text-base">Kas Organisasi</span>
+            <span className="block text-[11px] text-neutral-400">Panel Pembukuan</span>
           </div>
         </div>
 
-        <div className="px-4 py-6 flex-1 space-y-1.5">
-          <p className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Menu Utama</p>
+        <nav className="p-3 flex-1 space-y-0.5">
           {navLinks.map((item) => {
             const Icon = item.icon;
             return (
@@ -55,92 +50,85 @@ export default function Layout() {
                 to={item.path}
                 end={item.path === '/'}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                     isActive
-                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20'
-                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      ? 'bg-neutral-900 text-white font-medium'
+                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
                   }`
                 }
               >
-                <Icon className="w-5 h-5 shrink-0" />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span>{item.name}</span>
               </NavLink>
             );
           })}
-        </div>
+        </nav>
 
         {/* User Card & Logout */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-900/50">
-          <div className="flex items-center justify-between mb-3 px-2">
-            <div>
-              <p className="text-sm font-semibold text-white truncate max-w-[130px]">{admin?.name || 'Admin'}</p>
-              <p className="text-xs text-slate-400">@{admin?.username || 'admin'}</p>
+        <div className="p-3 border-t border-neutral-200 bg-neutral-50/50">
+          <div className="flex items-center justify-between px-2 py-1">
+            <div className="truncate pr-2">
+              <p className="text-xs font-medium text-neutral-900 truncate">{admin?.name || 'Admin'}</p>
+              <p className="text-[11px] text-neutral-500">@{admin?.username || 'admin'}</p>
             </div>
             <button
               onClick={handleLogout}
-              title="Logout"
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+              title="Keluar"
+              className="p-1.5 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200 rounded transition-colors"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Mobile Header */}
-      <header className="md:hidden bg-slate-900 text-white flex items-center justify-between p-4 sticky top-0 z-50 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-indigo-600 p-2 rounded-lg">
-            <Wallet className="w-5 h-5" />
-          </div>
-          <span className="font-bold tracking-wide">KAS KITA</span>
-        </div>
+      {/* Header Mobile */}
+      <header className="md:hidden bg-white border-b border-neutral-200 flex items-center justify-between px-4 h-14 sticky top-0 z-30">
+        <span className="font-semibold text-sm text-neutral-900">Kas Organisasi</span>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 text-slate-300 hover:text-white rounded-lg focus:outline-none"
+          className="p-1.5 text-neutral-600 hover:text-neutral-900 rounded"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </header>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-xs flex flex-col justify-between pt-16 p-6">
-          <div className="space-y-2">
-            {navLinks.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === '/'}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                      isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800'
-                    }`
-                  }
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </NavLink>
-              );
-            })}
-          </div>
-          <div className="border-t border-slate-800 pt-4">
+        <div className="md:hidden bg-white border-b border-neutral-200 px-4 py-3 space-y-1">
+          {navLinks.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
+                    isActive ? 'bg-neutral-900 text-white font-medium' : 'text-neutral-600 hover:bg-neutral-100'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.name}</span>
+              </NavLink>
+            );
+          })}
+          <div className="pt-2 border-t border-neutral-100 mt-2">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-rose-600/20 text-rose-300 rounded-xl font-medium"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 rounded-md"
             >
-              <LogOut className="w-5 h-5" />
-              Keluar (Logout)
+              <LogOut className="w-4 h-4" />
+              Keluar
             </button>
           </div>
         </div>
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto min-h-screen">
+      <main className="flex-1 overflow-y-auto min-h-[calc(100vh-3.5rem)] md:min-h-screen">
         <Outlet />
       </main>
     </div>

@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { formatRupiah, formatDate, exportToExcel, exportToCSV } from '../utils/helpers';
-import {
-  Receipt,
-  PlusCircle,
-  Search,
-  Filter,
-  Trash2,
-  Edit2,
-  Download,
-  X,
-  AlertCircle,
-  Calendar,
-} from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
@@ -101,7 +90,7 @@ export default function Expenses() {
   };
 
   const handleDelete = async (id, title) => {
-    if (window.confirm(`Yakin ingin menghapus catatan pengeluaran "${title}"?`)) {
+    if (window.confirm(`Hapus catatan pengeluaran "${title}"?`)) {
       try {
         await api.delete(`/expenses/${id}`);
         fetchExpenses();
@@ -114,7 +103,7 @@ export default function Expenses() {
   const handleExport = (format) => {
     const exportData = expenses.map((exp, index) => ({
       No: index + 1,
-      Judul: exp.title,
+      Keperluan: exp.title,
       Kategori: exp.category,
       Nominal: exp.amount,
       Tanggal: formatDate(exp.date),
@@ -131,124 +120,102 @@ export default function Expenses() {
   const totalExpenseAmount = expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 md:p-8 space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-neutral-200">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Pengeluaran Kas</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Pencatatan uang kas yang keluar untuk kegiatan atau operasional
+          <h1 className="text-xl font-semibold text-neutral-900">Pengeluaran Kas</h1>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Total tercatat: <span className="font-semibold text-neutral-900">{formatRupiah(totalExpenseAmount)}</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => handleExport('excel')}
-            className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors shadow-xs"
+            className="px-3 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-md text-xs font-medium transition-colors"
           >
-            <Download className="w-4 h-4" />
-            Excel
+            Export Excel
           </button>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-xs"
+            className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-medium transition-colors"
           >
-            <PlusCircle className="w-4 h-4" />
-            Catat Pengeluaran
+            + Catat Pengeluaran
           </button>
         </div>
       </div>
 
-      {/* Top Banner Total Expense */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Total Seluruh Pengeluaran Terdata
-          </p>
-          <p className="text-2xl font-bold text-rose-600 mt-1">{formatRupiah(totalExpenseAmount)}</p>
-        </div>
-        <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
-          <Receipt className="w-6 h-6" />
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-        <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+      {/* Search */}
+      <div className="bg-white p-3 rounded-md border border-neutral-200">
+        <div className="relative max-w-xs">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
             <Search className="w-4 h-4" />
           </div>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari kebutuhan / pengeluaran..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            placeholder="Cari pengeluaran..."
+            className="w-full pl-9 pr-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900"
           />
         </div>
       </div>
 
-      {/* Table Data */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      {/* Table */}
+      <div className="bg-white rounded-md border border-neutral-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase text-xs tracking-wider">
-                <th className="py-3.5 px-4 w-12 text-center">No</th>
-                <th className="py-3.5 px-4">Keperluan</th>
-                <th className="py-3.5 px-4">Kategori</th>
-                <th className="py-3.5 px-4">Tanggal</th>
-                <th className="py-3.5 px-4">Nominal</th>
-                <th className="py-3.5 px-4">Keterangan</th>
-                <th className="py-3.5 px-4 text-right">Aksi</th>
+              <tr className="bg-neutral-50 border-b border-neutral-200 text-neutral-600 text-xs font-medium">
+                <th className="py-2.5 px-4 w-12 text-center">No</th>
+                <th className="py-2.5 px-4">Keperluan</th>
+                <th className="py-2.5 px-4">Kategori</th>
+                <th className="py-2.5 px-4">Tanggal</th>
+                <th className="py-2.5 px-4">Nominal</th>
+                <th className="py-2.5 px-4">Keterangan</th>
+                <th className="py-2.5 px-4 text-right">Opsi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-neutral-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400">
-                    <div className="inline-block w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <p>Memuat data pengeluaran...</p>
+                  <td colSpan="7" className="py-8 text-center text-xs text-neutral-400">
+                    Memuat data pengeluaran...
                   </td>
                 </tr>
               ) : expenses.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400">
-                    Belum ada pengeluaran kas yang tercatat.
+                  <td colSpan="7" className="py-8 text-center text-xs text-neutral-400">
+                    Belum ada pengeluaran kas.
                   </td>
                 </tr>
               ) : (
                 expenses.map((exp, idx) => (
-                  <tr key={exp._id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 text-center text-slate-400">{idx + 1}</td>
-                    <td className="py-3.5 px-4 font-medium text-slate-800">{exp.title}</td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                        {exp.category}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-600 text-xs">{formatDate(exp.date)}</td>
-                    <td className="py-3.5 px-4 font-semibold text-rose-600">
+                  <tr key={exp._id} className="hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-4 text-center text-neutral-400 text-xs">{idx + 1}</td>
+                    <td className="py-2.5 px-4 font-medium text-neutral-900">{exp.title}</td>
+                    <td className="py-2.5 px-4 text-neutral-600 text-xs">{exp.category}</td>
+                    <td className="py-2.5 px-4 text-neutral-500 text-xs">{formatDate(exp.date)}</td>
+                    <td className="py-2.5 px-4 font-medium text-neutral-900">
                       -{formatRupiah(exp.amount)}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-500 text-xs max-w-xs truncate">
+                    <td className="py-2.5 px-4 text-neutral-500 text-xs truncate max-w-xs">
                       {exp.description || '-'}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="inline-flex items-center gap-2">
+                    <td className="py-2.5 px-4 text-right">
+                      <div className="inline-flex items-center gap-3 text-xs">
                         <button
                           onClick={() => handleOpenModal(exp)}
-                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Edit Pengeluaran"
+                          className="text-neutral-600 hover:text-neutral-900"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          Edit
                         </button>
                         <button
                           onClick={() => handleDelete(exp._id, exp.title)}
-                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Hapus Pengeluaran"
+                          className="text-neutral-400 hover:text-neutral-900"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Hapus
                         </button>
                       </div>
                     </td>
@@ -260,46 +227,45 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* Modal Catat / Edit Pengeluaran */}
+      {/* Modal Catat Pengeluaran */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-800 text-lg">
-                {editingExpense ? 'Edit Pengeluaran' : 'Catat Pengeluaran Baru'}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40">
+          <div className="bg-white rounded-lg border border-neutral-200 w-full max-w-sm p-5 shadow-lg">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+              <h2 className="font-semibold text-neutral-900 text-sm">
+                {editingExpense ? 'Edit Pengeluaran' : 'Catat Pengeluaran'}
+              </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="text-neutral-400 hover:text-neutral-600"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {formError && (
-              <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{formError}</span>
+              <div className="mt-3 p-2.5 rounded bg-neutral-50 border border-neutral-300 text-neutral-700 text-xs">
+                {formError}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleSubmit} className="mt-4 space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                  Keperluan / Judul Pengeluaran
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
+                  Keperluan / Judul
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Misal: Beli Konsumsi Rapat / Banner"
+                  placeholder="Misal: Pembelian ATK / Konsumsi"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
                   Nominal (Rp)
                 </label>
                 <input
@@ -309,23 +275,21 @@ export default function Expenses() {
                   placeholder="50000"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                    Kategori
-                  </label>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">Kategori</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
                   >
                     <option value="Operasional">Operasional</option>
                     <option value="Konsumsi">Konsumsi</option>
-                    <option value="Kegiatan / Event">Kegiatan / Event</option>
+                    <option value="Kegiatan">Kegiatan</option>
                     <option value="Peralatan">Peralatan</option>
                     <option value="Sosial">Sosial</option>
                     <option value="Lainnya">Lainnya</option>
@@ -333,46 +297,42 @@ export default function Expenses() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                    Tanggal
-                  </label>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">Tanggal</label>
                   <input
                     type="date"
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
-                  Keterangan Tambahan
-                </label>
+                <label className="block text-xs font-medium text-neutral-700 mb-1">Keterangan</label>
                 <textarea
                   rows="2"
-                  placeholder="Catatan tambahan untuk nota atau pembelian..."
+                  placeholder="Catatan tambahan..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-md text-sm text-neutral-900 focus:outline-none focus:border-neutral-900"
                 ></textarea>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-neutral-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-xl text-sm font-medium text-slate-700"
+                  className="px-3 py-1.5 border border-neutral-300 hover:bg-neutral-50 rounded-md text-xs font-medium text-neutral-700"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                  className="px-4 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md text-xs font-medium disabled:opacity-50"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Pengeluaran'}
+                  {submitting ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>
             </form>
